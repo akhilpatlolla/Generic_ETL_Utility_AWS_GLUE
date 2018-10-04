@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.2/workbox-sw.js");
 
 importScripts(
-  "/Generic_ETL_Utility_AWS_GLUE/precache-manifest.c51701ad976617727cd2674ead56d37c.js"
+  "/Generic_ETL_Utility_AWS_GLUE/precache-manifest.66e744ea9485e61ce84acff4496bc870.js"
 );
 
 workbox.clientsClaim();

@@ -1,26 +1,26 @@
 self.__precacheManifest = [
   {
-    "revision": "5d5d9eefa31e5e13a6610d9fa7a283bb",
-    "url": "/Generic_ETL_Utility_AWS_GLUE/static/media/logo.5d5d9eef.svg"
+    "revision": "4f0de412214ecef54fd78a034567c922",
+    "url": "/Generic_ETL_Utility_AWS_GLUE/static/media/logo.4f0de412.png"
   },
   {
     "revision": "6684a20e1cdae0f87c99",
     "url": "/Generic_ETL_Utility_AWS_GLUE/static/js/runtime~main.6684a20e.js"
   },
   {
-    "revision": "2911cbd2adc988153965",
-    "url": "/Generic_ETL_Utility_AWS_GLUE/static/js/main.2911cbd2.chunk.js"
+    "revision": "c674e956acd68320c4e1",
+    "url": "/Generic_ETL_Utility_AWS_GLUE/static/js/main.c674e956.chunk.js"
   },
   {
     "revision": "6105a37ce77693a684b2",
     "url": "/Generic_ETL_Utility_AWS_GLUE/static/js/1.6105a37c.chunk.js"
   },
   {
-    "revision": "2911cbd2adc988153965",
+    "revision": "c674e956acd68320c4e1",
     "url": "/Generic_ETL_Utility_AWS_GLUE/static/css/main.36c7ad09.chunk.css"
   },
   {
-    "revision": "6fe403178c5d60269c6c3c14d0507a0f",
+    "revision": "57c58dea97dd06dfd315bb5f8882a310",
     "url": "/Generic_ETL_Utility_AWS_GLUE/index.html"
   }
 ];
