@@ -27,14 +27,14 @@ java_import(spark._jvm, "net.snowflake.spark.snowflake")
 spark.conf.set('spark.sql.session.timeZone', 'UTC')
 spark._jvm.net.snowflake.spark.snowflake.SnowflakeConnectorUtils.enablePushdownSession(spark._jvm.org.apache.spark.sql.SparkSession.builder().getOrCreate())
 sfOptions = {
-"sfURL" : args['URL'],
-"sfAccount" : args['ACCOUNT'],
-"sfUser" : args['USERNAME'],
-"sfPassword" : args['PASSWORD'],
-"sfDatabase" : args['DB'],
-"sfSchema" : args['SCHEMA'],
-"sfWarehouse" : args['WAREHOUSE'],
-"sfRole" : args['ROLE']
+    "sfURL" : args['URL'],
+    "sfAccount" : args['ACCOUNT'],
+    "sfUser" : args['USERNAME'],
+    "sfPassword" : args['PASSWORD'],
+    "sfDatabase" : args['DB'],
+    "sfSchema" : args['SCHEMA'],
+    "sfWarehouse" : args['WAREHOUSE'],
+    "sfRole" : args['ROLE']
 }
 
 def getLastUpdated_timestamp(targetTable, timestamp_column):
@@ -71,7 +71,7 @@ def write_to_s3(dynamic_dataFrame, bucket, key, table_name):
 
 def deleteRecords(target_table, timestamp_column):
     """
-    deletes the records in snowflake table.
+    deletes the records in snowflake table to most recent records and backfill all the transactions created.
     
     parameters
         @target_table:      string 
@@ -89,11 +89,98 @@ def deleteRecords(target_table, timestamp_column):
     except :
         print('Error executing the delete query')
 
+def truncateTable(target_table):
+    """
+    Truncates the table
+
+    parameters
+        @target_table:      string
+    returns 
+        None
+    """
+    try:
+        spark._jvm.net.snowflake.spark.snowflake.Utils.runQuery(sfOptions , 'truncate {}'.format(target_table))
+        print('{} truncated sucessfully'.format(target_table))
+    except:
+        print('Error Truncating the Table {}'.format(target_table))
+
+def ETL_Utility(obj):
+    for table_name in obj:
+        connection_type     = obj[table_name]['connection_type']
+        target_table        = obj[table_name]['target_table']
+        timestamp_coloumn   = obj[table_name]['timestamp_coloumn']
+        coloumns_to_delete  = obj[table_name]['coloumns_to_delete']
+        bucket              = obj[table_name]['bucket']
+        key                 = obj[table_name]['key']
+        url                 = obj[table_name]['url']
+        properties          = {'user':obj[table_name]['user'], 'password': obj[table_name]['password']}
+        primary_key         = obj[table_name]['primary_key']
+        list_columns        = obj[table_name]['list_columns']
+        snowflake_stage     = obj[table_name]['stage']
+        
+        try:
+            ETL_operations      = list(obj[table_name]['operations'].keys())
+        except AttributeError:
+            ETL_operations      = []    
+
+        print('Creating Dynamic Data Frame')
+        connection_string = {"url": url, "user":properties["user"], "password": properties["password"],"dbtable": table_name } 
+        dynamic_dataFrame = glueContext.create_dynamic_frame_from_options(connection_type, connection_options=connection_string, format=None, format_options={}, transformation_ctx="")
+        print('Dynamic Schema :')
+        dynamic_dataFrame.printSchema()
+        print('dynamic Frame count :',dynamic_dataFrame.count())
+        print('Dropping Fields :', coloumns_to_delete )
+        dynamic_dataFrame = dynamic_dataFrame.drop_fields(coloumns_to_delete.split(','))
+        print('Dynamic schema after Dropping Fields ')
+
+        for operation in ETL_operations:
+            if operation is 'int_to_bool':
+                dataFrame = int_to_bool(dataFrame, obj[table_name]['operations']['int_to_bool'])
+            if operation is 'truncate':
+                truncateTable(obj[table_name]['operations']['truncate'])
+
+        deleteRecords(target_table, timestamp_coloumn)   
+        dynamic_dataFrame.printSchema()
+        latestmodified = getLastUpdated_timestamp(target_table,timestamp_coloumn)
+        print("Last Updated Time : ",latestmodified)   
+        Date_Condition = ''
+
+        if latestmodified is not None:
+            Date_Condition = "where {time_stamp} >= '{last_date}'".format(time_stamp=timestamp_coloumn, last_date=latestmodified.isoformat())
+            print("Date Condition is ", Date_Condition)
+            dynamic_dataFrame = Filter.apply(frame = dynamic_dataFrame, f = lambda x: x[timestamp_coloumn] >= latestmodified )
+            # local = dynamic_dataFrame.toDF()
+            # local = local.filter(local[timestamp_coloumn] >= latestmodified)
+            # print("After the filter count is ",local.count() )
+            dynamic_dataFrame = DynamicFrame.fromDF(local, glueContext, "dynamic_dataFrame")
+            print("final conversion dynamic frame count is ",dynamic_dataFrame.count() )
+
+                                
+        print('Uploading to S3, Updated data fields with {} rows '.format(dynamic_dataFrame.count()))
+        M_time = write_to_s3(dynamic_dataFrame, bucket, key, table_name)
+        print('Uploaded to s3 at',M_time)
+        snowflakeMerge(table_name, target_table,Date_Condition,snowflake_stage,primary_key,list_columns, M_time, coloumns_to_delete)
 
 
+obj = {
+        @@template@@
+        # 'source_table':{
+        #     'connection_type':'mysql',
+        #     'url':'jdbc:mysql://host:3306/schema',
+        #     'user':'username',
+        #     'password':'password',
+        #     'target_table':'target_table',
+        #     'primary_key':'pk',
+        #     'list_columns':'pk, timestamp column, other columns',
+        #     'bucket':'s3_bucket_name',
+        #     'key':'path_to_dump',
+        #     'stage':'@STAGE_LOCATION_SNOWFLAKE',
+        #     'timestamp_coloumn':'timestamp_column',
+        #     'coloumns_to_delete':'string seperated by "," ',
+        #     'operations':{'ETL_Operation':'Value','truncate':'target_table_name'}
+        # }
+}
 
+ETL_Utility(obj)
 
-
-
-
-
+job.commit()
