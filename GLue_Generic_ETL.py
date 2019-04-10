@@ -13,9 +13,8 @@ from pyspark.sql.functions import *
 from py4j.java_gateway import java_import
 SNOWFLAKE_SOURCE_NAME = "net.snowflake.spark.snowflake"
 
-# @params: [JOB_NAME, SNOWFLAKE, AFFILIATE,JOB_TYPE]
 args = getResolvedOptions(
-    sys.argv, ['DB1', 'DB2'])
+    sys.argv, ['DB1', 'DB2', 'JOB_TYPE'])
 session = boto3.Session(region_name='us-east-1')
 cloudwatch = session.client('cloudwatch')
 ssm = session.client('ssm')
