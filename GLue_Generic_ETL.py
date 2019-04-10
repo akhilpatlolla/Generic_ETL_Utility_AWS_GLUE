@@ -15,7 +15,7 @@ SNOWFLAKE_SOURCE_NAME = "net.snowflake.spark.snowflake"
 
 # @params: [JOB_NAME, SNOWFLAKE, AFFILIATE,JOB_TYPE]
 args = getResolvedOptions(
-    sys.argv, ['DB1', 'SNOWFLAKE', 'AFFILIATE', 'JOB_TYPE', 'PORTAL', 'SCRIBE', 'PROGRAM360', 'OPS','INVENTORY'])
+    sys.argv, ['DB1', 'DB2'])
 session = boto3.Session(region_name='us-east-1')
 cloudwatch = session.client('cloudwatch')
 ssm = session.client('ssm')
