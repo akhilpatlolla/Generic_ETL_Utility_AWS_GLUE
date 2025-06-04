@@ -41,10 +41,11 @@ This project implements a scalable and modular ETL (Extract, Transform, Load) fr
      ┌────────────────────────┐
      │ Write to Amazon S3     │
      └─────────┬──────────────┘
-               ▼
-   ┌─────────────────────────────┐
-   │ Merge to Snowflake via SQL  │
-   └─────────────────────────────┘
+               ▼   
+    ┌─────────────────────────────┐
+    │ Merge to Snowflake via SQL  │
+    └─────────────────────────────┘
+   
 
 ---
 
